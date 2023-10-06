@@ -12,7 +12,7 @@ public class FilledLineRasterizer extends LineRasterizer {
         calcMidpoint(x1, y1, x2, y2);
     }
 
-    //Midpoint
+    // MIDPOINT
     private void calcMidpoint(int x1, int y1, int x2, int y2) {
         int sx, sy;
         sx = (x1 + x2) / 2;

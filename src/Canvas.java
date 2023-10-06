@@ -1,4 +1,6 @@
 import model.Line;
+import model.Point;
+import rasterize.DottedLineRasterizer;
 import rasterize.FilledLineRasterizer;
 import rasterize.LineRasterizer;
 import rasterize.RasterBufferedImage;
@@ -31,9 +33,15 @@ public class Canvas {
 	private JPanel panel;
 	private RasterBufferedImage raster;
 	private LineRasterizer lineRasterizer;
+	private DottedLineRasterizer dottedLineRasterizer;
 
 	private int startClickX, startClickY, endClickX, endClickY;
+	private boolean editMode = false;
+
+	// DRAWN LINES
 	private List<Line> lines = new ArrayList<>();
+
+	private Line currentLine;
 
 
 	public Canvas(int width, int height) {
@@ -48,6 +56,7 @@ public class Canvas {
 
 		lineRasterizer = new FilledLineRasterizer(raster);
 
+		dottedLineRasterizer = new DottedLineRasterizer(raster);
 
 		panel = new JPanel() {
 			private static final long serialVersionUID = 1L;
@@ -103,14 +112,35 @@ public class Canvas {
 		panel.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e){
-				clear(0x000000);
-				for (Line line : lines) {
-					lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
+
+				if(!editMode){
+					clear(0x000000);
+					for (Line line : lines) {
+						lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
+					}
+
+					lineRasterizer.rasterize(startClickX, startClickY, e.getX(), e.getY(), Color.YELLOW);
+
+					panel.repaint();
+
+				} else if (currentLine != null) {
+					currentLine.setX1(startClickX);
+					currentLine.setY1(startClickY);
+					currentLine.setX2(e.getX());
+					currentLine.setY2(e.getY());
+
+					clear(0x000000);
+
+					for (Line line : lines) {
+						if (line == currentLine) {
+							dottedLineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
+						} else {
+							lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
+						}
+					}
+					panel.repaint();
 				}
 
-				lineRasterizer.rasterize(startClickX, startClickY, e.getX(), e.getY(), Color.YELLOW);
-
-				panel.repaint();
 			}
 
 		});
@@ -121,12 +151,24 @@ public class Canvas {
 			public void mousePressed(MouseEvent e) {
 				startClickX = e.getX();
 				startClickY = e.getY();
+
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					editMode = true;
+					for (Line line : lines) {
+						if (line.FindClosePoint(startClickX, startClickY, line)) {
+							currentLine = line;
+							System.out.println("Close point found!");
+							break;
+						}
+					}
+				}
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				endClickX = e.getX();
 				endClickY = e.getY();
+
 				Line finalLine = new Line(startClickX, startClickY, endClickX, endClickY, 0xffff00);
 				lines.add(finalLine);
 
@@ -134,8 +176,10 @@ public class Canvas {
 					lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
 				}
 
-				panel.repaint();
+				editMode = false;
+				currentLine = null;
 
+				panel.repaint();
 
 			}
 		});
