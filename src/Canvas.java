@@ -36,12 +36,14 @@ public class Canvas {
 	private DottedLineRasterizer dottedLineRasterizer;
 
 	private int startClickX, startClickY, endClickX, endClickY;
-	private boolean editMode = false;
 
 	// DRAWN LINES
 	private List<Line> lines = new ArrayList<>();
+	// HELP LINES FOR H/V/D LINES
+	private List<Line> helpLines = new ArrayList<>();
 
 	private Line currentLine;
+	private boolean editMode, shiftPressed = false;
 
 
 	public Canvas(int width, int height) {
@@ -88,8 +90,7 @@ public class Canvas {
 
 				// HORIZONTAL / VERTICAL / DIAGONAL LINES
 				if(keyEvent.getKeyCode() == KeyEvent.VK_SHIFT){
-					System.out.println("Shift pressed - LINE SHIFT");
-
+					shiftPressed = true;
 				}
 
 				// REMOVE ALL LINES
@@ -119,9 +120,39 @@ public class Canvas {
 						lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
 					}
 
-					lineRasterizer.rasterize(startClickX, startClickY, e.getX(), e.getY(), Color.YELLOW);
+					if (shiftPressed) {
 
-					panel.repaint();
+						int deltaX = e.getX() - startClickX;
+						int deltaY = e.getY() - startClickY;
+
+						double angle = Math.toDegrees(Math.atan2(deltaY, deltaX));
+
+						int nearestAngle = (int) (Math.round(angle / 45) * 45);
+
+						if (angle < 0) {
+							nearestAngle = (nearestAngle + 360) % 360;
+						}
+
+						double radians = Math.toRadians(nearestAngle);
+
+						double lineLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+						int x2 = (int) (startClickX + Math.cos(radians) * lineLength);
+						int y2 = (int) (startClickY + Math.sin(radians) * lineLength);
+
+						helpLines.clear();
+
+						Line line = new Line(startClickX, startClickY, x2, y2, 0xffff00);
+
+						helpLines.add(line);
+
+						for (Line helpLine : helpLines) {
+							lineRasterizer.rasterize(helpLine.getX1(), helpLine.getY1(), helpLine.getX2(), helpLine.getY2(), Color.YELLOW);
+						}
+
+					} else {
+						lineRasterizer.rasterize(startClickX, startClickY, e.getX(), e.getY(), Color.YELLOW);
+					}
 
 				} else if (currentLine != null) {
 					currentLine.setX1(startClickX);
@@ -138,8 +169,9 @@ public class Canvas {
 							lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
 						}
 					}
-					panel.repaint();
 				}
+
+				panel.repaint();
 
 			}
 
@@ -149,6 +181,8 @@ public class Canvas {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
+				shiftPressed = false;
+
 				startClickX = e.getX();
 				startClickY = e.getY();
 
@@ -170,7 +204,12 @@ public class Canvas {
 				endClickY = e.getY();
 
 				Line finalLine = new Line(startClickX, startClickY, endClickX, endClickY, 0xffff00);
-				lines.add(finalLine);
+
+				if (!shiftPressed) {
+					lines.add(finalLine);
+				} else if (shiftPressed) {
+					lines.add(helpLines.get(0));
+				}
 
 				for (Line line : lines) {
 					lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
