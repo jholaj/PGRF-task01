@@ -70,5 +70,4 @@ public class Line {
         return distance1 < threshold || distance2 < threshold;
     }
 
-
 }

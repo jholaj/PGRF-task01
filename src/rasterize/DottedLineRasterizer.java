@@ -9,7 +9,13 @@ public class DottedLineRasterizer extends LineRasterizer {
         calcMidpointWithGap(x1, y1, x2, y2);
     }
 
-    // MIDPOINT
+    /**
+     *
+     * Algoritmus: Midpoint (Využívá půlení úseček)
+     * Výhody: Jednoduchá implementace, funkční pro všechny kvadranty
+     * Nevýhody: Rekurze (lze vyřešit zásobníkem)
+     *
+     * */
     private void calcMidpointWithGap(int x1, int y1, int x2, int y2) {
         int gap = 10;
 
