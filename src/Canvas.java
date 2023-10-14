@@ -99,6 +99,14 @@ public class Canvas {
 					if (polygonMode) {
 						System.out.println("Caps pressed again... Polygon mode turned off");
 						polygonMode = false;
+						clear(0xffff00);
+						for (Line line : lines) {
+							lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
+						}
+						for (Polygon polygon : polygons) {
+							polygonRasterizer.rasterize(polygon);
+						}
+						panel.repaint();
 					} else {
 						System.out.println("Caps pressed... Polygon mode");
 						polygon = new Polygon();
@@ -194,6 +202,29 @@ public class Canvas {
 
 			}
 
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				if(polygon.getSize() > 1 && polygonMode) {
+					clear(0xffff00);
+
+					//draw base of polygon
+					lineRasterizer.rasterize(polygon.getPoint(0).x, polygon.getPoint(0).y, startClickX, startClickY, Color.YELLOW);
+
+					//draw drawn polygons and lines
+					for (Polygon polygon : polygons) {
+						polygonRasterizer.rasterize(polygon);
+					}
+					for (Line line : lines) {
+						lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
+					}
+
+					//draw help lines
+					dottedLineRasterizer.rasterize(startClickX, startClickY,e.getX(), e.getY(), Color.YELLOW);
+					dottedLineRasterizer.rasterize(polygon.getPoints().get(0).x, polygon.getPoints().get(0).y,e.getX(), e.getY(), Color.YELLOW);
+				}
+				panel.repaint();
+
+			}
 		});
 
 		panel.addMouseListener(new MouseAdapter() {
