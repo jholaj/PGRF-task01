@@ -22,7 +22,7 @@ public class DottedLineRasterizer extends LineRasterizer {
         int sx = (x1 + x2) / 2;
         int sy = (y1 + y2) / 2;
 
-        raster.setPixel(sx, sy, this.color.getRGB());
+        raster.setPixel(sx, sy, 0xffff00);
 
         if (Math.abs(x1 - sx) > gap || Math.abs(y1 - sy) > gap) {
             drawLine(x1, y1, sx, sy);

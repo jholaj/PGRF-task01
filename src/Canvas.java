@@ -1,9 +1,7 @@
 import model.Line;
 import model.Point;
-import rasterize.DottedLineRasterizer;
-import rasterize.FilledLineRasterizer;
-import rasterize.LineRasterizer;
-import rasterize.RasterBufferedImage;
+import model.Polygon;
+import rasterize.*;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -34,16 +32,18 @@ public class Canvas {
 	private RasterBufferedImage raster;
 	private LineRasterizer lineRasterizer;
 	private DottedLineRasterizer dottedLineRasterizer;
-
+	private PolygonRasterizer polygonRasterizer;
 	private int startClickX, startClickY, endClickX, endClickY;
 
 	// DRAWN LINES
 	private List<Line> lines = new ArrayList<>();
+	// DRAWN POLYGONS
+	private List<Polygon> polygons = new ArrayList<>();
 	// HELP LINES FOR H/V/D LINES
 	private List<Line> helpLines = new ArrayList<>();
-
 	private Line currentLine;
-	private boolean editMode, shiftPressed = false;
+	private Polygon polygon;
+	private boolean editMode, shiftPressed, polygonMode = false;
 
 
 	public Canvas(int width, int height) {
@@ -57,8 +57,10 @@ public class Canvas {
 		raster = new RasterBufferedImage(width, height);
 
 		lineRasterizer = new FilledLineRasterizer(raster);
-
 		dottedLineRasterizer = new DottedLineRasterizer(raster);
+		polygonRasterizer = new PolygonRasterizer(lineRasterizer);
+
+		polygon = new Polygon();
 
 		panel = new JPanel() {
 			private static final long serialVersionUID = 1L;
@@ -93,11 +95,24 @@ public class Canvas {
 					shiftPressed = true;
 				}
 
+				if(keyEvent.getKeyCode() == KeyEvent.VK_CAPS_LOCK){
+					if (polygonMode) {
+						System.out.println("Caps pressed again... Polygon mode turned off");
+						polygonMode = false;
+					} else {
+						System.out.println("Caps pressed... Polygon mode");
+						polygon = new Polygon();
+						polygonMode = true;
+					}
+				}
+
 				// REMOVE ALL LINES
 				if(keyEvent.getKeyCode() == KeyEvent.VK_C){
 					System.out.println("C pressed - CLEAR CANVAS");
 					clear(0x000000);
 					lines.clear();
+					polygons.clear();
+					polygon = new Polygon();
 					panel.repaint();
 				}
 
@@ -171,6 +186,10 @@ public class Canvas {
 					}
 				}
 
+				for (Polygon polygon : polygons) {
+					polygonRasterizer.rasterize(polygon);
+				}
+
 				panel.repaint();
 
 			}
@@ -196,6 +215,14 @@ public class Canvas {
 						}
 					}
 				}
+
+				if(polygonMode){
+					Point p = new Point(e.getX(), e.getY());
+					polygon.addPoint(p);
+					polygons.add(polygon);
+					clear(0xffff00);
+
+				}
 			}
 
 			@Override
@@ -217,6 +244,10 @@ public class Canvas {
 
 				editMode = false;
 				currentLine = null;
+
+				for (Polygon polygon : polygons) {
+					polygonRasterizer.rasterize(polygon);
+				}
 
 				panel.repaint();
 
