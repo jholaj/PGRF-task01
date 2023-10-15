@@ -1,8 +1,10 @@
 package rasterize;
 
 public class DottedLineRasterizer extends LineRasterizer {
-    public DottedLineRasterizer(Raster raster) {
+    private int gap;
+    public DottedLineRasterizer(Raster raster, int gap) {
         super(raster);
+        this.gap = gap;
     }
 
     protected void drawLine(int x1, int y1, int x2, int y2) {
@@ -17,8 +19,6 @@ public class DottedLineRasterizer extends LineRasterizer {
      *
      * */
     private void calcMidpointWithGap(int x1, int y1, int x2, int y2) {
-        int gap = 10;
-
         int sx = (x1 + x2) / 2;
         int sy = (y1 + y2) / 2;
 

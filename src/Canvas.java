@@ -1,6 +1,4 @@
-import model.Line;
-import model.Point;
-import model.Polygon;
+import model.*;
 import rasterize.*;
 
 import java.awt.BorderLayout;
@@ -41,6 +39,7 @@ public class Canvas {
 	private List<Polygon> polygons = new ArrayList<>();
 	// HELP LINES FOR H/V/D LINES
 	private List<Line> helpLines = new ArrayList<>();
+	//drag line
 	private Line currentLine;
 	private Polygon polygon;
 	private boolean editMode, shiftPressed, polygonMode = false;
@@ -53,11 +52,10 @@ public class Canvas {
 		frame.setTitle("UHK FIM PGRF : " + this.getClass().getName());
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
 		raster = new RasterBufferedImage(width, height);
 
 		lineRasterizer = new FilledLineRasterizer(raster);
-		dottedLineRasterizer = new DottedLineRasterizer(raster);
+		dottedLineRasterizer = new DottedLineRasterizer(raster, 10);
 		polygonRasterizer = new PolygonRasterizer(lineRasterizer);
 
 		polygon = new Polygon();
@@ -99,7 +97,8 @@ public class Canvas {
 					if (polygonMode) {
 						System.out.println("Caps pressed again... Polygon mode turned off");
 						polygonMode = false;
-						clear(0xffff00);
+						clear(0x000000);
+						// draw all lines
 						for (Line line : lines) {
 							lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
 						}
@@ -109,6 +108,7 @@ public class Canvas {
 						panel.repaint();
 					} else {
 						System.out.println("Caps pressed... Polygon mode");
+						//clear polygon object
 						polygon = new Polygon();
 						polygonMode = true;
 					}
@@ -136,22 +136,22 @@ public class Canvas {
 		panel.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e){
-
+				//if not editmode => raster all lines
 				if(!editMode){
 					clear(0x000000);
 					for (Line line : lines) {
 						lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
 					}
-
+					// if shift pressed => draw help line
 					if (shiftPressed) {
-
 						int deltaX = e.getX() - startClickX;
 						int deltaY = e.getY() - startClickY;
 
 						double angle = Math.toDegrees(Math.atan2(deltaY, deltaX));
 
+						// calc nearest multiple of 45
 						int nearestAngle = (int) (Math.round(angle / 45) * 45);
-
+						// if negative => add 360°
 						if (angle < 0) {
 							nearestAngle = (nearestAngle + 360) % 360;
 						}
@@ -174,6 +174,7 @@ public class Canvas {
 						}
 
 					} else {
+						// if shift not pressed => draw drag line
 						lineRasterizer.rasterize(startClickX, startClickY, e.getX(), e.getY(), Color.YELLOW);
 					}
 
@@ -187,6 +188,7 @@ public class Canvas {
 
 					for (Line line : lines) {
 						if (line == currentLine) {
+							// if edit mode => draw dotted line
 							dottedLineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
 						} else {
 							lineRasterizer.rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2(), Color.YELLOW);
@@ -194,6 +196,7 @@ public class Canvas {
 					}
 				}
 
+				//polygons
 				for (Polygon polygon : polygons) {
 					polygonRasterizer.rasterize(polygon);
 				}
@@ -205,7 +208,7 @@ public class Canvas {
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				if(polygon.getSize() > 1 && polygonMode) {
-					clear(0xffff00);
+					clear(0x000000);
 
 					//draw base of polygon
 					lineRasterizer.rasterize(polygon.getPoint(0).x, polygon.getPoint(0).y, startClickX, startClickY, Color.YELLOW);
@@ -221,6 +224,7 @@ public class Canvas {
 					//draw help lines
 					dottedLineRasterizer.rasterize(startClickX, startClickY,e.getX(), e.getY(), Color.YELLOW);
 					dottedLineRasterizer.rasterize(polygon.getPoints().get(0).x, polygon.getPoints().get(0).y,e.getX(), e.getY(), Color.YELLOW);
+
 				}
 				panel.repaint();
 
@@ -251,8 +255,6 @@ public class Canvas {
 					Point p = new Point(e.getX(), e.getY());
 					polygon.addPoint(p);
 					polygons.add(polygon);
-					clear(0xffff00);
-
 				}
 			}
 
@@ -260,6 +262,8 @@ public class Canvas {
 			public void mouseReleased(MouseEvent e) {
 				endClickX = e.getX();
 				endClickY = e.getY();
+				clear(0x000000);
+
 
 				Line finalLine = new Line(startClickX, startClickY, endClickX, endClickY, 0xffff00);
 
@@ -279,7 +283,6 @@ public class Canvas {
 				for (Polygon polygon : polygons) {
 					polygonRasterizer.rasterize(polygon);
 				}
-
 				panel.repaint();
 
 			}
@@ -297,7 +300,14 @@ public class Canvas {
 	}
 
 	public void start() {
+		drawString(raster.getGraphics(), "H/V/D LINES - SHIFT\nEDIT LINES - RIGHT MOUSE CLICK\nPOLYGON MODE - CAPS", 575, 525);
 		panel.repaint();
+	}
+
+	public void drawString(Graphics g, String text, int x, int y) {
+		for (String line : text.split("\n")) {
+			g.drawString(line, x, y += g.getFontMetrics().getHeight());
+		}
 	}
 
 	public static void main(String[] args) {

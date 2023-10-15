@@ -23,7 +23,6 @@ public class FilledLineRasterizer extends LineRasterizer {
         int sx, sy;
         sx = (x1 + x2) / 2;
         sy = (y1 + y2) / 2;
-        //raster.setPixel(sx, sy, this.color.getRGB());
         raster.setPixel(sx, sy, 0xffff00);
 
         if (Math.abs(x1 - sx) > 1 || Math.abs(y1 - sy) > 1) {
