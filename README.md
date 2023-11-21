@@ -1,4 +1,4 @@
-# Rasterizace úsečky, tečkované čáry a n-úhelníku // TASK 1
+# TASK 1 // Rasterizace úsečky, tečkované čáry a n-úhelníku
 - [x] Vytvořte program pro kreslení úsečky zadané dvěma libovolnými koncovými body [x1,y1] a [x2,y2].
 - [x] Koncové body zadávejte interaktivně pomocí tzv. pružné čáry. Stisknutím tlačítka myši zadáte první vrchol, při tažení myší se bude vykreslovat aktuální úsečka společně s již vykreslenou scénou a při uvolnění tlačítka se potvrdí koncový vrchol.
 - [x] K implementaci použijte rozhraní a třídy definované na cvičeních. Třídy případně upravte nebo doplňte o potřebné metody. Návrhy třídy Point, Line a LineRasterizer naleznete v modulu task1 (viz Oliva-obsah-ukázky a návody).
